@@ -266,7 +266,7 @@ main (int argc, char *argv[])
    *  Set up the end device's spreading factor  *
    **********************************************/
 
-  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
+  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
 
   NS_LOG_DEBUG ("Completed configuration");
 

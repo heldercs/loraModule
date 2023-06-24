@@ -153,7 +153,7 @@ int main (int argc, char *argv[])
   helper.Install (phyHelper, macHelper, gateways);
 
   // Set spreading factors up
-  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
+  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
 
   ////////////
   // Create NS

@@ -107,7 +107,7 @@ InitializeNetwork (int nDevices, int nGateways)
 
   NodeContainer gateways = CreateGateways (nGateways, mobility, channel);
 
-  LorawanMacHelper ().SetSpreadingFactorsUp (endDevices, gateways, channel);
+  LorawanMacHelper ().SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
 
   Ptr<Node> nsNode = CreateNetworkServer (endDevices, gateways);
 
