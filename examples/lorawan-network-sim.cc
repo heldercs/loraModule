@@ -1,19 +1,7 @@
 /*
- * =====================================================================================
- *
- *       Filename:  lorawan-network-mClass-sim.cc
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  02/06/2020 22:42:04
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Francisco Helder (FHC), helderhdw@gmail.com
- *   Organization:  Federal University of Ceara
- *
- * =====================================================================================
+ * This script simulates a complex scenario with multiple gateways and end
+ * devices. The metric of interest for this script is the throughput of the
+ * network.
  */
 
 #include "ns3/end-device-lora-phy.h"
@@ -51,23 +39,20 @@ NS_LOG_COMPONENT_DEFINE ("LorawanNetworkSimulator");
 #define MAXRTX 4
 
 // Network settings
-int nDevices = 200;
-int nAlarms = 20;
-int nGateways = 1;
-double radius = 5600;
+uint16_t nDevices = 200;
+uint8_t nGateways = 1;
+uint16_t radius = 6400; //Note that due to model updates, 7500 m is no longer the maximum distance 
 double gatewayRadius = 0;
-double simulationTime = 600;
+uint16_t simulationTime = 3600;
 
 // Channel model
 bool realisticChannelModel = false;
 
-int appPeriodSeconds = 600;
+uint16_t appPeriodSeconds = 60;
 
 // Output control
 bool printBuildings = false;
-bool printEDs = true;
-
-enum SF { SF7=7, SF8, SF9, SF10, SF11, SF12 };
+bool print = false;
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -76,23 +61,23 @@ enum SF { SF7=7, SF8, SF9, SF10, SF11, SF12 };
  * =====================================================================================
  */
 void PrintEndDevices (NodeContainer endDevices, NodeContainer gateways, std::string filename1, std::string filename2){
-  	const char * c = filename1.c_str ();
+	const char * c = filename1.c_str ();
 	vector<int> countSF(6,0);
   	std::ofstream spreadingFactorFile;
   	spreadingFactorFile.open (c);
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
     	Ptr<Node> object = *j;
       	Ptr<MobilityModel> position = object->GetObject<MobilityModel> ();
-      	NS_ASSERT (position != 0);
+      	NS_ASSERT (position != NULL);
       	Ptr<NetDevice> netDevice = object->GetDevice (0);
       	Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-      	NS_ASSERT (loraNetDevice != 0);
+      	NS_ASSERT (loraNetDevice != NULL);
       	Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac> ();
-      	int sf = int(mac->GetSfFromDataRate(mac->GetDataRate ()));
+      	uint8_t sf = mac->GetSfFromDataRate(mac->GetDataRate ());
 		countSF[sf-7]++;
 		//NS_LOG_DEBUG("sf: " << sf);
       	Vector pos = position->GetPosition ();
-      	spreadingFactorFile << pos.x << " " << pos.y << " " << sf << endl;
+      	spreadingFactorFile << pos.x << " " << pos.y << " " << (unsigned)sf << endl;
   	}
   	spreadingFactorFile.close ();
 
@@ -148,7 +133,7 @@ void buildingHandler ( NodeContainer endDevices, NodeContainer gateways ){
 
   	BuildingsHelper::Install (endDevices);
   	BuildingsHelper::Install (gateways);
-    BuildingsHelper::MakeMobilityModelConsistent ();
+    //BuildingsHelper::MakeMobilityModelConsistent ();
 
   	// Print the buildings
   	if (printBuildings){
@@ -165,93 +150,23 @@ void buildingHandler ( NodeContainer endDevices, NodeContainer gateways ){
     }
 
 }/* -----  end of function buildingHandler  ----- */
- 
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  getPacketSizeFromSF
- *  Description:  
- * =====================================================================================
- */
-uint8_t getPacketSizeFromSF (NodeContainer endDevices, int j, bool pDiff){
-
-	uint8_t size = 90, sf=0;
-
-	Ptr<Node> object = endDevices.Get(j);
-    Ptr<NetDevice> netDevice = object->GetDevice (0);
-    Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-    NS_ASSERT (loraNetDevice != 0);
-    Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac> ();
-	sf = mac->GetSfFromDataRate(mac->GetDataRate ());
-
-	if (pDiff){
-			switch ( sf ) {
-					case SF7:
-							size = 90;
-							break;
-					case SF8:
-							size = 35;
-							break;
-					case SF9:
-							size = 5;
-							break;
-					default:	
-							break;
-			}/* -----  end switch  ----- */
-	}
-	
-	return(size);
-}/* -----  end of function getRateSF  ----- */
-
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  getShiftPosition
- *  Description:  
- * =====================================================================================
- */
-Vector getShiftPosition (NodeContainer endDevices, int j, int base){
-
-	double radius=0, co=0, si=0;	
-	Ptr<Node> object = endDevices.Get(j);
-    Ptr<MobilityModel> mobility = object->GetObject<MobilityModel> ();
-    NS_ASSERT (mobility != 0);
-    Vector position = mobility->GetPosition ();
-
-	cout << "x: " << position.x << " y: " << position.y <<endl;
-	cout << "mod: " << (int)position.x/base << " mod: " << (int)position.y/base <<endl;
-
-	radius = sqrt(pow(position.x, 2) + pow(position.y, 2));
-	co = position.x/radius;
-	si = position.y/radius;
-	
-	radius += base - (int)radius/700*700;
-	position.x = radius*co;
-	position.y = radius*si;
-
-    cout << "x: " << position.x << " y: " << position.y <<endl;
-	cout << sqrt(pow(position.x, 2) + pow(position.y, 2)) << endl;
-	cout << endl;
-
-	return(position);
-}/* -----  end of function getRateSF  ----- */
 
 
 int main (int argc, char *argv[]){
-
 	string fileMetric="./scratch/result-STAs.dat";
  	string fileData="./scratch/mac-STAs-GW-1.txt";
 	string endDevFile="./TestResult/test";
 	string gwFile="./TestResult/test";
-	bool flagRtx=0; //, sizeStatus=0;
-  	uint32_t nSeed=1, maxClass=0;
-	int trial=1; //, nCount=0, nClass1=0, nClass2=0, nClass3=0;
-	vector<int> sfQuant(6,0);
+	bool rtxEnable=false;
+  	uint32_t nSeed=1;
+	uint8_t trial=1; //, numRTX=0;
+	vector<uint8_t> sfQuant(6,0);
 	double packLoss=0, sent=0, received=0, avgDelay=0;
-	double angle=0, sAngle=M_PI; //, radius1=4200; //, radius2=4900;
-	double throughput=0, probSucc=0, probLoss=0;
+	double angle=0, sAngle=M_PI;
+	double throughput=0, probSucc=0, probLoss=0; 
 
-	CommandLine cmd;
+ 
+  	CommandLine cmd;
   	cmd.AddValue ("nSeed", "Number of seed to position", nSeed);
   	cmd.AddValue ("nDevices", "Number of end devices to include in the simulation", nDevices);
   	cmd.AddValue ("nGateways", "Number of gateway rings to include", nGateways);
@@ -261,22 +176,22 @@ int main (int argc, char *argv[]){
   	cmd.AddValue ("appPeriod", "The period in seconds to be used by periodically transmitting applications", appPeriodSeconds);
   	cmd.AddValue ("file1", "files containing result data", fileMetric);
   	cmd.AddValue ("file2", "files containing result information", fileData);
-  	cmd.AddValue ("printEDs", "Whether or not to print various informations", printEDs);
+  	cmd.AddValue ("print", "Whether or not to print various informations", print);
   	cmd.AddValue ("trial", "set trial parameter", trial);
   	cmd.Parse (argc, argv);
 
 	endDevFile += to_string(trial) + "/endDevices" + to_string(nDevices) + ".dat";
 	gwFile += to_string(trial) + "/GWs" + to_string(nGateways) + ".dat";
 
-	nAlarms = 0.10*nDevices;
-	
-  	// Set up logging
-  	//  LogComponentEnable ("LorawanNetworkSimulator", LOG_LEVEL_ALL);
+ 	// Set up logging
+  	 LogComponentEnable ("LorawanNetworkSimulator", LOG_LEVEL_ALL);
   	// LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
   	// LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
   	// LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
   	// LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
+   	// LogComponentEnable("SimpleEndDeviceLoraPhy", LOG_LEVEL_DEBUG);
   	// LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
+   	// LogComponentEnable("SimpleGatewayLoraPhy", LOG_LEVEL_DEBUG);
   	// LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
   	// LogComponentEnable("LorawanMac", LOG_LEVEL_ALL);
   	// LogComponentEnable("EndDeviceLorawanMac", LOG_LEVEL_ALL);
@@ -288,7 +203,7 @@ int main (int argc, char *argv[]){
   	// LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
   	// LogComponentEnable("LorawanMacHelper", LOG_LEVEL_ALL);
   	// LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
-  	// LogComponentEnable("PeriodicSender", LOG_LEVEL_ALL);
+    // LogComponentEnable("PeriodicSender", LOG_LEVEL_ALL);
    	// LogComponentEnable("RandomSenderHelper", LOG_LEVEL_ALL);
   	// LogComponentEnable("RandomSender", LOG_LEVEL_ALL);
   	// LogComponentEnable("LorawanMacHeader", LOG_LEVEL_ALL);
@@ -297,22 +212,21 @@ int main (int argc, char *argv[]){
   	// LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
   	// LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
   	// LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
-
+ 
   	/***********
    	*  Setup  *
    	***********/
 	ofstream myfile;
-
   	RngSeedManager::SetSeed(1);
   	RngSeedManager::SetRun(nSeed);
 
   	// Create the time value from the period
   	Time appPeriod = Seconds (appPeriodSeconds);
 
-  	// Mobility
+ 	// Mobility
   	MobilityHelper mobility;
   	mobility.SetPositionAllocator ("ns3::UniformDiscPositionAllocator", "rho", DoubleValue (radius),
-                                 "X", DoubleValue (0.0), "Y", DoubleValue (0.0));
+     	                            "X", DoubleValue (0.0), "Y", DoubleValue (0.0));
   	mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
   	/************************
@@ -325,9 +239,9 @@ int main (int argc, char *argv[]){
   	loss->SetReference (1, 7.7);
 
   	if (realisticChannelModel){
-      	// Create the correlated shadowing component
+  		// Create the correlated shadowing component
       	Ptr<CorrelatedShadowingPropagationLossModel> shadowing =
-          	CreateObject<CorrelatedShadowingPropagationLossModel> ();
+        	  CreateObject<CorrelatedShadowingPropagationLossModel> ();
 
       	// Aggregate shadowing to the logdistance loss
       	loss->SetNext (shadowing);
@@ -350,7 +264,7 @@ int main (int argc, char *argv[]){
   	LoraPhyHelper phyHelper = LoraPhyHelper ();
   	phyHelper.SetChannel (channel);
 
- 	// Create the LorawanMacHelper
+  	// Create the LorawanMacHelper
   	LorawanMacHelper macHelper = LorawanMacHelper ();
 
   	// Create the LoraHelper
@@ -374,14 +288,12 @@ int main (int argc, char *argv[]){
 
   	// Assign a mobility model to each node
   	mobility.Install (endDevices);
-  	//int x =5000.00, y= 0;
+
   	// Make it so that nodes are at a certain height > 0
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
       	Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel> ();
       	Vector position = mobility->GetPosition ();
-		//position.x = 100;
-		//position.y = 100;	
- 		position.z = 1.2;
+      	position.z = 1.2;
       	mobility->SetPosition (position);
 	}
 
@@ -389,28 +301,27 @@ int main (int argc, char *argv[]){
   	uint8_t nwkId = 54;
   	uint32_t nwkAddr = 1864;
   	Ptr<LoraDeviceAddressGenerator> addrGen =
-    	  CreateObject<LoraDeviceAddressGenerator> (nwkId, nwkAddr);
+     	 CreateObject<LoraDeviceAddressGenerator> (nwkId, nwkAddr);
 
- 	// Create the LoraNetDevices of the end devices
+  	// Create the LoraNetDevices of the end devices
   	macHelper.SetAddressGenerator (addrGen);
   	phyHelper.SetDeviceType (LoraPhyHelper::ED);
   	macHelper.SetDeviceType (LorawanMacHelper::ED_A);
   	helper.Install (phyHelper, macHelper, endDevices);
 
   	// Now end devices are connected to the channel
-
-  	// Connect trace sources
+	// Connect trace sources
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
-      	Ptr<Node> node = *j;
+    	Ptr<Node> node = *j;
       	Ptr<LoraNetDevice> loraNetDevice = node->GetDevice (0)->GetObject<LoraNetDevice> ();
       	Ptr<LoraPhy> phy = loraNetDevice->GetPhy ();
-	 
-/*        	if (flagRtx){
-      		Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac>();
+	
+		Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac>();
+      	if (rtxEnable){
 	  		mac->SetMaxNumberOfTransmissions (MAXRTX);
 	  		mac->SetMType (LorawanMacHeader::CONFIRMED_DATA_UP);
-	  	}*/
-    }
+	  	}
+   	}
 
   	/*********************
    	*  Create Gateways  *
@@ -420,37 +331,33 @@ int main (int argc, char *argv[]){
   	NodeContainer gateways;
   	gateways.Create (nGateways);
 
-    sAngle = (2*M_PI)/(nGateways-1);  
-   
   	Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator> ();
   	// Make it so that nodes are at a certain height > 0
-  	allocator->Add (Vector (0.0, 0.0, 0.0));
+  	allocator->Add (Vector (0.0, 0.0, 15.0));
   	mobility.SetPositionAllocator (allocator);
   	mobility.Install (gateways);
-	uint32_t cnt=0;
+
   	// Make it so that nodes are at a certain height > 0
   	for (NodeContainer::Iterator j = gateways.Begin ();
     	j != gateways.End (); ++j){
       	Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel> ();
       	Vector position = mobility->GetPosition ();
-		if (!cnt){
-			position.x = 0; 
-  			position.y = 0;
-			cnt++; 
-    	}else{
-			position.x = gatewayRadius * cos(angle); 
-  			position.y = gatewayRadius * sin(angle); 
-			angle += sAngle;
-		}
+		position.x = gatewayRadius * cos(angle); 
+  		position.y = gatewayRadius * sin(angle); 
       	position.z = 15;
       	mobility->SetPosition (position);
+		angle += sAngle;
 	}
+
 
   	// Create a netdevice for each gateway
   	phyHelper.SetDeviceType (LoraPhyHelper::GW);
   	macHelper.SetDeviceType (LorawanMacHelper::GW);
   	helper.Install (phyHelper, macHelper, gateways);
 
+  	/**********************************************
+  	*  Set up the end device's spreading factor  *
+   	**********************************************/
 	/**********************
    	*  Handle buildings  *
    	**********************/
@@ -459,99 +366,34 @@ int main (int argc, char *argv[]){
   	/**********************************************
    	*  Set up the end device's spreading factor  *
    	**********************************************/
-
-  	//sfQuant = macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, flagRtx);
+  	sfQuant = macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, rtxEnable);
 	//sfQuant = macHelper.SetSpreadingFactorsEIB (endDevices, radius);
 	//sfQuant = macHelper.SetSpreadingFactorsEAB (endDevices, radius);
-	//sfQuant = macHelper.SetSpreadingFactorsProp (endDevices, 0.5, 0, radius);
-	sfQuant = macHelper.SetSpreadingFactorsStrategies (endDevices, sfQuant, nAlarms, 0*nDevices, nDevices, LorawanMacHelper::ALM_FI);
+	//sfQuant = macHelper.SetSpreadingFactorsProp (endDevices, radius);
 
-	for (int i=0; i< 6;i++){	
-		NS_LOG_INFO("SF"<< i+7 << ": " << sfQuant.at(i));
-		if (sfQuant.at(i))
-			maxClass++;
-	}
-	NS_LOG_INFO("maxClass: " << maxClass);
-
-
-	if (flagRtx){
-		for (uint32_t  j = 0; j < (unsigned)nDevices; ++j){
-			Ptr<Node> object = endDevices.Get(j);
-			Ptr<NetDevice> netDevice = object->GetDevice (0);
-			Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-			NS_ASSERT (loraNetDevice != 0);
-			Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac> ();
-			NS_ASSERT (mac != 0);
-			if (mac->GetSfFromDataRate(mac->GetDataRate ()) == 8){
-				//cout <<"j: " << j << " sf: " << (unsigned)mac->GetSfFromDataRate(mac->GetDataRate ()) << endl; 
-	  			mac->SetMaxNumberOfTransmissions (MAXRTX);
-	  			mac->SetMType (LorawanMacHeader::CONFIRMED_DATA_UP);
-	  		}
-		}
-	}
-	
-
-  	NS_LOG_DEBUG ("Completed configuration");
+	NS_LOG_DEBUG ("Completed configuration");
 
   	/*********************************************
    	*  Install applications on the end devices  *
    	*********************************************/
 
   	Time appStopTime = Seconds (simulationTime);
- 
-/*  PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
-  	appHelper.SetPeriod (Seconds (appPeriodSeconds));	
-	appHelper.SetPacketSize (19);
+
+/*	PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
+  	appHelper.SetPeriod (Seconds (appPeriodSeconds));
+  	appHelper.SetPacketSize (19);
+  	Ptr<RandomVariableStream> rv = CreateObjectWithAttributes<UniformRandomVariable> (
+    	  "Min", DoubleValue (0), "Max", DoubleValue (10));
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
-	
- 
-	RandomSenderHelper appHelper = RandomSenderHelper ();
+*/
+
+    RandomSenderHelper appHelper = RandomSenderHelper ();
   	appHelper.SetMean (appPeriodSeconds);
-	appHelper.SetPacketSize (19);
+   	appHelper.SetPacketSize (19);
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
-	
 
   	appContainer.Start (Seconds (0));
   	appContainer.Stop (appStopTime);
-*/
-
-    PeriodicSenderHelper appRegularHelper = PeriodicSenderHelper ();
-    appRegularHelper.SetPeriod (Seconds (appPeriodSeconds));
-    appRegularHelper.SetPacketSize (19);
-	ApplicationContainer appRegContainer;
-	for (uint32_t  j = 0; j < (unsigned)nDevices; ++j){
-		//bool first=0;
-		Ptr<Node> object = endDevices.Get(j);
-		Ptr<NetDevice> netDevice = object->GetDevice (0);
-		Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-		NS_ASSERT (loraNetDevice != 0);
-		Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac> ();
-		NS_ASSERT (mac != 0);
-		if (mac->GetSfFromDataRate(mac->GetDataRate ()) == 7)
-   			appRegContainer.Add(appRegularHelper.Install(endDevices.Get(j)));
-	}
-    NS_LOG_DEBUG("appRegulars -> startTime:" << 0 << "  stopTime:" << appStopTime.GetSeconds());
-    appRegContainer.Start (Seconds(0));
-    appRegContainer.Stop (appStopTime);
-
-    RandomSenderHelper appAlarmHelper = RandomSenderHelper ();
-    appAlarmHelper.SetMean (appPeriodSeconds);
-    appAlarmHelper.SetPacketSize (5);
-	ApplicationContainer appAlmContainer;
-	for (uint32_t  j = 0; j < (unsigned)nDevices; ++j){
-		//bool first=0;
-		Ptr<Node> object = endDevices.Get(j);
-		Ptr<NetDevice> netDevice = object->GetDevice (0);
-		Ptr<LoraNetDevice> loraNetDevice = netDevice->GetObject<LoraNetDevice> ();
-		NS_ASSERT (loraNetDevice != 0);
-		Ptr<EndDeviceLorawanMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLorawanMac> ();
-		NS_ASSERT (mac != 0);
-		if (mac->GetSfFromDataRate(mac->GetDataRate ()) == 8)
-    		appAlmContainer.Add(appAlarmHelper.Install(endDevices.Get(j)));
-	}
-    NS_LOG_DEBUG("appAlarms -> startTime:" << 0 << "  stopTime:" << appStopTime.GetSeconds());
-    appAlmContainer.Start (Seconds(0));
-    appAlmContainer.Stop (appStopTime);
 
   	/**************************
    	*  Create Network Server  *
@@ -563,16 +405,16 @@ int main (int argc, char *argv[]){
 
   	// Create a NS for the network
   	nsHelper.SetEndDevices (endDevices);
-  	nsHelper.SetGateways (gateways);
+ 	nsHelper.SetGateways (gateways);
   	nsHelper.Install (networkServer);
 
   	//Create a forwarder for each gateway
- 	forHelper.Install (gateways);
+  	forHelper.Install (gateways);
 
  	/**********************
    	* Print output files *
    	*********************/
-  	if (printEDs){
+  	if (print){
     	PrintEndDevices (endDevices, gateways, endDevFile, gwFile);
  	}
 
@@ -587,57 +429,51 @@ int main (int argc, char *argv[]){
 
   	Simulator::Destroy ();
 
-  	/////////////////////////////
-  	// Metrics results to file //
-  	////////////xx///////////////
-  	
-	for (uint32_t i=SF7;i<SF7+maxClass;i++)
-	{
-    	NS_LOG_INFO (endl <<"//////////////////////////////////////////////");
-    	NS_LOG_INFO ("//  Computing SF-"<<i<<" performance metrics  //");
-    	NS_LOG_INFO ("//////////////////////////////////////////////" << endl);
+ 	NS_LOG_INFO("SF Allocation: "<< "SF7=" << (unsigned)sfQuant.at(0) << " SF8=" << (unsigned)sfQuant.at(1) << " SF9=" << (unsigned)sfQuant.at(2)
+				<< " SF10=" << (unsigned)sfQuant.at(3) << " SF11=" << (unsigned)sfQuant.at(4) << " SF12=" << (unsigned)sfQuant.at(5));
 
-  		LoraPacketTracker &tracker = helper.GetPacketTracker ();
-
-		stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1), i)) >> sent >> received;
-	
-  		if(flagRtx)
-    		stringstream(tracker.CountMacPacketsGloballyCpsr (Seconds (0), appStopTime + Hours (1))) >> avgDelay;
-		else
-			stringstream(tracker.CountMacPacketsGloballyDelay (Seconds (0), appStopTime + Hours (1), (unsigned)nDevices, (unsigned)nGateways, i)) >> avgDelay;
-
-	
-		packLoss = sent - received;
-  		throughput = received/simulationTime;
-
-  		probSucc = received/sent;
-  		probLoss = packLoss/sent;
-
-		NS_LOG_INFO("----------------------------------------------------------------");
-   		NS_LOG_INFO("nDevices" << "  |  " << "throughput" << "  |  "  << "probSucc"  << "  |  " << "probLoss" <<  "  |  " << "avgDelay"); 
-   		NS_LOG_INFO(nDevices  << "       |  " << throughput << "    |  " << probSucc << "   |  " << probLoss << "   |  " << avgDelay);
-		NS_LOG_INFO("----------------------------------------------------------------"<< endl);
-
-  		myfile.open (fileMetric+"-SF"+to_string(i)+".dat", ios::out | ios::app);
-  		myfile << nDevices << ", " << throughput << ", " << probSucc << ", " <<  probLoss  << ", " << avgDelay << "\n";
-	  	myfile.close();  
+  	///////////////////////////
+  	// Print results to file //
+  	///////////////////////////
+   	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  	NS_LOG_INFO ("Computing performance metrics");
   
+  	LoraPacketTracker &tracker = helper.GetPacketTracker ();
+  
+  	stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1))) >> sent >> received;
 
-	   	NS_LOG_INFO("numDev:" << nAlarms << " numGW:" << nGateways << " simTime:" << simulationTime << " throughput:" << throughput);
-  		NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-  		NS_LOG_INFO("sent:" << sent << "    succ:" << received << "     drop:"<< packLoss  << "   delay:" << avgDelay);
- 	 	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl);
+	stringstream(tracker.CountMacPacketsGloballyDelay(Seconds(0), appStopTime + Hours(1), (unsigned)nDevices, (unsigned)nGateways)) >> avgDelay;
 
- 	 	myfile.open (fileData, ios::out | ios::app);
-  		myfile << "sent: " << sent << " succ: " << received << " drop: "<< packLoss << "\n";
-  		myfile << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "\n";
-  		myfile << "numDev: " << nDevices << " numGat: " << nGateways << " simTime: " << simulationTime << " throughput: " << throughput<< "\n";
-  		myfile << "##################################################################" << "\n\n";
-  		myfile.close();  
+	packLoss = sent - received;
+  	throughput = received/simulationTime;
 
-	}
+  	probSucc = received/sent;
+  	probLoss = packLoss/sent;
+
+	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+   	NS_LOG_INFO("nDevices: " << nDevices); 
+	NS_LOG_INFO("throughput: " << throughput); 
+	NS_LOG_INFO("probSucc: " << probSucc << " (" << probSucc*100 << "%)"); 
+	NS_LOG_INFO("probLoss: " <<  probLoss<< " (" << probLoss*100 << "%)"); 
+	NS_LOG_INFO("avgDelay: " << avgDelay); 
+	NS_LOG_INFO("----------------------------------"<< endl);
+
+  	myfile.open (fileMetric, ios::out | ios::app);
+  	myfile << nDevices << ", " << throughput << ", " << probSucc << ", " <<  probLoss  << ", " << avgDelay << "\n";
+  	myfile.close();  
+
+   	NS_LOG_INFO("numDev:" << nDevices << " numGW:" << unsigned(nGateways) << " simTime:" << simulationTime << " throughput:" << throughput);
+  	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  	NS_LOG_INFO("sent:" << sent << "    succ:" << received << "     drop:"<< packLoss  << "   delay:" << avgDelay);
+  	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl);
+
+  	myfile.open (fileData, ios::out | ios::app);
+  	myfile << "sent: " << sent << " succ: " << received << " drop: "<< packLoss << "\n";
+  	myfile << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "\n";
+  	myfile << "numDev: " << nDevices << " numGat: " << nGateways << " simTime: " << simulationTime << " throughput: " << throughput<< "\n";
+  	myfile << "##################################################" << "\n\n";
+  	myfile.close();  
 
 
   	return(0);
 }
-
