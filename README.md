@@ -7,16 +7,21 @@ This project is an ns-3 module that can be used to perform simulations of a LoRa
 This section is aimed at getting a user to a working state starting with a machine that may never have had LoRaWAN-NS3 installed. It covers prerequisites, ways to obtain LoRaWAN-NS3, ways to build LoRaWAN-NS3, and ways to verify your build and run LoRaWAN program.
 
 ### Prerequisites ###
-```
+
 To run simulations using this module, you will need to install ns-3, and clone this repository inside the src directory:
+```
 
 git clone https://github.com/nsnam/ns-3-dev-git ns-3
 git clone https://github.com/heldercs/loraModule.git ns-3/src/lorawan
+
+```
 If you are interested in having the latest features (and more bug-prone code), you can check out the develop branch:
+```
 
 cd ns-3/src/lorawan
 git checkout develop
 ```
+
 
 ### Building ###
 
