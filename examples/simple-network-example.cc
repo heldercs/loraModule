@@ -134,7 +134,7 @@ int main (int argc, char *argv[])
   /******************
    * Set Data Rates *
    ******************/
-  std::vector<int> sfQuantity (6);
+  std::vector<uint8_t> sfQuantity (6);
   sfQuantity = macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
 
   /****************
