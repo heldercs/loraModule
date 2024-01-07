@@ -246,6 +246,7 @@ int main (int argc, char *argv[]){
   	uint32_t nSeed=1;
 	uint8_t trial=1, numClass=0; //, nCount=0, nClass1=0, nClass2=0, nClass3=0;
 	vector<uint8_t> sfQuant(6,0);
+	vector<double> rtxQuant(4,0);
 	double packLoss=0, sent=0, received=0, avgDelay=0;
 	double angle=0, sAngle=M_PI; //, radius1=4200; //, radius2=4900;
 	double throughput=0, probSucc=0, probLoss=0;
@@ -268,35 +269,35 @@ int main (int argc, char *argv[]){
 	gwFile += to_string(trial) + "/GWs" + to_string(nGateways) + ".dat";
 	
   	// Set up logging
-  	 LogComponentEnable ("LorawanNetworkSimulatorMClass", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
-  	 //LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
-   	 //LogComponentEnable("SimpleEndDeviceLoraPhy", LOG_LEVEL_ALL);
- 	 //LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("SimpleGatewayLoraPhy", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LorawanMac", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("EndDeviceLorawanMac", LOG_LEVEL_ALL);
-	 //LogComponentEnable("EndDeviceStatus", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("ClassAEndDeviceLorawanMac", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("GatewayLorawanMac", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LogicalLoraChannel", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LorawanMacHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("PeriodicSender", LOG_LEVEL_ALL);
-   	 //LogComponentEnable("RandomSenderHelper", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("RandomSender", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LorawanMacHeader", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
-     //LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
-  	 //LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
+  	//LogComponentEnable ("LorawanNetworkSimulatorMClass", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
+  	//LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
+  	//LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
+   	//LogComponentEnable("SimpleEndDeviceLoraPhy", LOG_LEVEL_ALL);
+ 	//LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
+  	//LogComponentEnable("SimpleGatewayLoraPhy", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LorawanMac", LOG_LEVEL_ALL);
+  	//LogComponentEnable("EndDeviceLorawanMac", LOG_LEVEL_ALL);
+	//LogComponentEnable("EndDeviceStatus", LOG_LEVEL_ALL);
+  	//LogComponentEnable("ClassAEndDeviceLorawanMac", LOG_LEVEL_ALL);
+  	//LogComponentEnable("GatewayLorawanMac", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LogicalLoraChannel", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LorawanMacHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("PeriodicSender", LOG_LEVEL_ALL);
+   	//LogComponentEnable("RandomSenderHelper", LOG_LEVEL_ALL);
+  	//LogComponentEnable("RandomSender", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LorawanMacHeader", LOG_LEVEL_ALL);
+  	//LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
+    //LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
+  	//LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
+  	//LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
+  	//LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
 
   	/***********
    	*  Setup  *
@@ -395,6 +396,7 @@ int main (int argc, char *argv[]){
   	macHelper.SetAddressGenerator (addrGen);
   	phyHelper.SetDeviceType (LoraPhyHelper::ED);
   	macHelper.SetDeviceType (LorawanMacHelper::ED_A);
+   	macHelper.SetRegion (LorawanMacHelper::SingleChannel);
   	helper.Install (phyHelper, macHelper, endDevices);
 
   	// Now end devices are connected to the channel
@@ -471,18 +473,18 @@ int main (int argc, char *argv[]){
 
   	Time appStopTime = Seconds (simulationTime);
  
- 	/*  PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
+ 	PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
   	appHelper.SetPeriod (Seconds (appPeriodSeconds));	
 	appHelper.SetPacketSize (19);
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
-*/
+
  
-	RandomSenderHelper appHelper = RandomSenderHelper ();
+	/*  RandomSenderHelper appHelper = RandomSenderHelper ();
   	appHelper.SetMean (appPeriodSeconds);
-	//appHelper.SetBound (appPeriodSeconds);
+	appHelper.SetBound (appPeriodSeconds);
 	appHelper.SetPacketSize (19);
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
-	
+*/
 
   	appContainer.Start (Seconds (0));
   	appContainer.Stop (appStopTime);
@@ -535,14 +537,14 @@ int main (int argc, char *argv[]){
 
   		LoraPacketTracker &tracker = helper.GetPacketTracker ();
 
-		stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1), i)) >> sent >> received;
+		stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (2), i)) >> sent >> received;
 
-		if(flagRtx)
-    		stringstream(tracker.CountMacPacketsGloballyCpsr (Seconds (0), appStopTime + Hours (1))) >> avgDelay;
-		else
-			stringstream(tracker.CountMacPacketsGloballyDelay (Seconds (0), appStopTime + Hours (1), (unsigned)nDevices, (unsigned)nGateways, i)) >> avgDelay;
-
-	
+		if(flagRtx){
+    		stringstream(tracker.CountMacPacketsGloballyCpsr (Seconds (0), appStopTime + Hours (2), i)) >> rtxQuant.at(0) >> rtxQuant.at(1) >> rtxQuant.at(2) >> rtxQuant.at(3);
+		}
+		
+		stringstream(tracker.CountMacPacketsGloballyDelay (Seconds (0), appStopTime + Hours (1), (unsigned)nDevices, (unsigned)nGateways, i)) >> avgDelay;
+			
 		packLoss = sent - received;
   		throughput = received/simulationTime;
 
@@ -558,6 +560,16 @@ int main (int argc, char *argv[]){
   		myfile << nDevices << ", " << throughput << ", " << probSucc << ", " <<  probLoss  << ", " << avgDelay << "\n";
 	  	myfile.close();  
 
+		if (flagRtx){
+			sort(rtxQuant.begin(),rtxQuant.end(), greater<double>());		
+			myfile.open (fileMetric+"-RTX"+to_string(i)+".dat", ios::out | ios::app);
+			myfile << nDevices << ", " << sent;
+			for(uint8_t i=0; i<rtxQuant.size(); i++)
+				myfile << ", " << rtxQuant[i];
+	  		myfile << "\n";
+			myfile.close();  
+		}
+
 	   	NS_LOG_INFO("numDev:" << nDevices << " numGW:" << nGateways << " simTime:" << simulationTime << " throughput:" << throughput);
   		NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
   		NS_LOG_INFO("sent:" << sent << "    succ:" << received << "     drop:"<< packLoss  << "   delay:" << avgDelay);
@@ -570,8 +582,7 @@ int main (int argc, char *argv[]){
   		myfile << "##################################################################" << "\n\n";
   		myfile.close();  
 
-	}
-
+}
 
   	return(0);
 }
