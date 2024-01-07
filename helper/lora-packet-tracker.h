@@ -62,6 +62,7 @@ struct RetransmissionStatus
 {
   Time firstAttempt;
   Time finishTime;
+  uint8_t sf;
   uint8_t reTxAttempts;
   bool successful;
 };
@@ -95,7 +96,7 @@ public:
   // Packet transmission at an EndDevice
   void MacTransmissionCallback (Ptr<Packet const> packet, uint8_t sf);
   void RequiredTransmissionsCallback (uint8_t reqTx, bool success,
-                                      Time firstAttempt, Ptr<Packet> packet);
+                                      Time firstAttempt, Ptr<Packet> packet, uint8_t sf);
   // Packet reception at the Gateway
   void MacGwReceptionCallback (Ptr<Packet const> packet);
 
@@ -163,6 +164,8 @@ public:
    */
   std::string CountMacPacketsGloballyCpsr (Time startTime, Time stopTime);
 
+  std::string CountMacPacketsGloballyCpsr (Time startTime, Time stopTime, uint8_t sf);
+ 
 
   std::string CountMacPacketsGloballyDelay (Time startTime, Time stopTime, 
 											uint32_t gwId, uint32_t gwNum);

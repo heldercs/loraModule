@@ -120,6 +120,14 @@ SimpleGatewayLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8
 {
   NS_LOG_FUNCTION (this << packet << rxPowerDbm << duration << frequencyMHz);
 
+  LoraTag tag;
+  packet->RemovePacketTag (tag);
+  uint16_t nodeId = tag.GetNodeId();
+  uint8_t rtxLeft = tag.GetNumTx();
+  packet->AddPacketTag (tag);
+
+  NS_LOG_DEBUG("receiving id: " << (unsigned)nodeId <<  " rx: " << (unsigned)rtxLeft << " sf: " << (unsigned)sf);
+
   // Fire the trace source
   m_phyRxBeginTrace (packet);
 
@@ -130,6 +138,12 @@ SimpleGatewayLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8
                    << unsigned (sf) << " because we are in TX mode");
 
       m_phyRxEndTrace (packet);
+
+	  if(rtxLeft == 0 && m_interference.GetIncrementalRedundancy() ){
+		NS_LOG_INFO("clear vector");
+		//std::cout << "147 id: " << (unsigned)nodeId << std::endl;
+		m_interference.ClearIndexUmap((unsigned)nodeId);
+	  }
 
       // Fire the trace source
       if (m_device)
@@ -146,7 +160,7 @@ SimpleGatewayLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8
 
   // Add the event to the LoraInterferenceHelper
   Ptr<LoraInterferenceHelper::Event> event;
-  event = m_interference.Add (duration, rxPowerDbm, sf, packet, frequencyMHz);
+  event = m_interference.Add (duration, rxPowerDbm, sf, packet, frequencyMHz, (unsigned)nodeId, (unsigned)m_interference.GetIncrementalRedundancy());
 
   // Cycle over the receive paths to check availability to receive the packet
   std::list<Ptr<SimpleGatewayLoraPhy::ReceptionPath>>::iterator it;
@@ -166,9 +180,16 @@ SimpleGatewayLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8
           if (rxPowerDbm < sensitivity) // Packet arrived below sensitivity
             {
               NS_LOG_INFO ("Dropping packet reception of packet with sf = "
-                           << unsigned (sf) << " because under the sensitivity of " << sensitivity
-                           << " dBm");
+                           << unsigned(sf) <<
+                           " because under the sensitivity of "
+                           << sensitivity << " dBm");
 
+			  if(rtxLeft == 0 && m_interference.GetIncrementalRedundancy()){
+			  	NS_LOG_INFO("clear vector");
+			  	//std::cout << "196 id: " << (unsigned)nodeId << std::endl;
+				m_interference.ClearIndexUmap((unsigned)nodeId);
+	  		  }
+    
               if (m_device)
                 {
                   m_underSensitivity (packet, m_device->GetNode ()->GetId ());
@@ -207,6 +228,12 @@ SimpleGatewayLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8
                << unsigned (sf) << " and frequency " << frequencyMHz
                << "MHz because no suitable demodulator was found");
 
+  if(rtxLeft == 0 && m_interference.GetIncrementalRedundancy()){
+  	NS_LOG_INFO("clear vector");
+ 	//std::cout << "242 id: " << (unsigned)nodeId << " rx: " << (unsigned)rtxLeft << std::endl;
+ 	m_interference.ClearIndexUmap((unsigned)nodeId);
+  }
+        
   // Fire the trace source
   if (m_device)
     {
@@ -223,6 +250,12 @@ SimpleGatewayLoraPhy::EndReceive (Ptr<Packet> packet, Ptr<LoraInterferenceHelper
 {
   NS_LOG_FUNCTION (this << packet << *event);
 
+  LoraTag tag;
+  packet->RemovePacketTag (tag);
+  uint16_t nodeId = tag.GetNodeId();
+  uint8_t rtxLeft = tag.GetNumTx();
+  packet->AddPacketTag (tag);
+ 
   // Call the trace source
   m_phyRxEndTrace (packet);
 
@@ -243,7 +276,13 @@ SimpleGatewayLoraPhy::EndReceive (Ptr<Packet> packet, Ptr<LoraInterferenceHelper
       tag.SetDestroyedBy (packetDestroyed);
       packet->AddPacketTag (tag);
 
-      // Fire the trace source
+	  if(rtxLeft == 0 && m_interference.GetIncrementalRedundancy()){
+	  	NS_LOG_INFO("clear vector");
+		//std::cout << "292 id: " << (unsigned)nodeId << std::endl;
+	  	m_interference.ClearIndexUmap((unsigned)nodeId);
+	  }
+    
+     // Fire the trace source
       if (m_device)
         {
           m_interferedPacket (packet, m_device->GetNode ()->GetId ());
@@ -255,9 +294,16 @@ SimpleGatewayLoraPhy::EndReceive (Ptr<Packet> packet, Ptr<LoraInterferenceHelper
     }
   else // Reception was correct
     {
-      NS_LOG_INFO ("Packet with SF " << unsigned (event->GetSpreadingFactor ())
-                                     << " received correctly");
-
+      NS_LOG_INFO ("Packet with SF " <<
+                   unsigned(event->GetSpreadingFactor ()) <<
+                   " received correctly");
+ 
+	  if(m_interference.GetIncrementalRedundancy()){
+	  	NS_LOG_INFO("clear vector");
+		//std::cout << "315 id: " << (unsigned)nodeId << std::endl;
+	  	m_interference.ClearIndexUmap((unsigned)nodeId);
+	  }
+    
       // Fire the trace source
       if (m_device)
         {

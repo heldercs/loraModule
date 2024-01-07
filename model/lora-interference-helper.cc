@@ -34,13 +34,15 @@ NS_LOG_COMPONENT_DEFINE ("LoraInterferenceHelper");
 
 // Event Constructor
 LoraInterferenceHelper::Event::Event (Time duration, double rxPowerdBm, uint8_t spreadingFactor,
-                                      Ptr<Packet> packet, double frequencyMHz)
+                                      Ptr<Packet> packet, double frequencyMHz, uint16_t nodeId, uint8_t irType)
     : m_startTime (Simulator::Now ()),
       m_endTime (m_startTime + duration),
       m_sf (spreadingFactor),
       m_rxPowerdBm (rxPowerdBm),
       m_packet (packet),
-      m_frequencyMHz (frequencyMHz)
+      m_frequencyMHz (frequencyMHz),
+	  m_nodeId(nodeId),
+	  m_irType(irType)
 {
   // NS_LOG_FUNCTION_NOARGS ();
 }
@@ -92,6 +94,18 @@ double
 LoraInterferenceHelper::Event::GetFrequency (void) const
 {
   return m_frequencyMHz;
+}
+
+uint16_t
+LoraInterferenceHelper::Event::GetNodeId (void) const
+{
+  return m_nodeId;
+}
+
+uint8_t
+LoraInterferenceHelper::Event::GetIrType (void) const
+{
+  return m_irType;
 }
 
 void
@@ -173,7 +187,8 @@ LoraInterferenceHelper::GetTypeId (void)
   LoraInterferenceHelper::LoraInterferenceHelper () : m_collisionSnir(LoraInterferenceHelper::collisionSnirGoursaud)
 {
   NS_LOG_FUNCTION (this);
-
+  //m_incrementalRed = CHASECOMBINING;
+  m_incrementalRed = NOREDUNDANCY;
   SetCollisionMatrix (collisionMatrix);
 }
 
@@ -186,7 +201,7 @@ Time LoraInterferenceHelper::oldEventThreshold = Seconds (2);
 
 Ptr<LoraInterferenceHelper::Event>
 LoraInterferenceHelper::Add (Time duration, double rxPower, uint8_t spreadingFactor,
-                             Ptr<Packet> packet, double frequencyMHz)
+                             Ptr<Packet> packet, double frequencyMHz, uint16_t nodeId, uint8_t irType)
 {
 
   NS_LOG_FUNCTION (this << duration.GetSeconds () << rxPower << unsigned(spreadingFactor) << packet
@@ -194,7 +209,7 @@ LoraInterferenceHelper::Add (Time duration, double rxPower, uint8_t spreadingFac
 
   // Create an event based on the parameters
   Ptr<LoraInterferenceHelper::Event> event = Create<LoraInterferenceHelper::Event> (
-      duration, rxPower, spreadingFactor, packet, frequencyMHz);
+      duration, rxPower, spreadingFactor, packet, frequencyMHz, nodeId, irType);
 
   // Add the event to the list
   m_events.push_back (event);
@@ -262,7 +277,8 @@ LoraInterferenceHelper::IsDestroyedByInterference (Ptr<LoraInterferenceHelper::E
   double rxPowerDbm = event->GetRxPowerdBm ();
   uint8_t sf = event->GetSpreadingFactor ();
   double frequency = event->GetFrequency ();
-
+  uint16_t nodeId = event->GetNodeId();
+  
   // Handy information about the time frame when the packet was received
   Time now = Simulator::Now ();
   Time duration = event->GetDuration ();
@@ -337,18 +353,69 @@ LoraInterferenceHelper::IsDestroyedByInterference (Ptr<LoraInterferenceHelper::E
       // Check whether the packet survives the interference of this SF
       double snirIsolation = m_collisionSnir[unsigned(sf) - 7][unsigned(currentSf) - 7];
       NS_LOG_DEBUG ("The needed isolation to survive is " << snirIsolation << " dB");
-      double snir =
-          10 * log10 (signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7));
-      NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
+     
+	  double snir;
+	  if(event->GetIrType()){
+		snir = signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7);
+	  	//double snir_p =	10 * log10 (signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7));
+		//std::cout << " The current SNIR is " << snir_p << " dB" << std::endl;
+		//std::cout << " The current SNIR is " << snir << std::endl;
+		NS_LOG_DEBUG ("The current SNIR is " << snir << " W");
+      }else{
+	  	snir =
+          	10 * log10 (signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7));
+	  	NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
+      }
+	  
 
-      if (snir >= snirIsolation)
+//	if (nodeId == 44)
+//		std::cout << "node: " << nodeId << " SNIR: " << snir << " sign sf: " << unsigned(sf) << " current sf: " << unsigned(currentSf) << std::endl;
+	
+	 uint8_t id = 0; 
+     // add incremental redundancy case 
+	  switch ( event->GetIrType() ) {
+			  case CHASECOMBINING:
+				if(m_chaseCombiningSnir.count(unsigned(nodeId))>0){
+					if(m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].size()>0){
+						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)+=snir;
+						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)++;
+						//if (nodeId == 44)
+						//	std::cout << "The SNIRp CH is " << m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
+					}else{
+						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].resize(2);
+						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)=snir;
+						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)=1;
+						//if (nodeId == 44)
+						//	std::cout << "I The SNIRp CH is "<< m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
+					}
+				}else{
+					m_chaseCombiningSnir[unsigned(nodeId)].resize(6);
+					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].resize(2);
+					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)=snir;
+					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)=1;
+					//if (nodeId == 44)
+					//	std::cout << "I The SNIRp CH is " << m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
+				}
+				snir = m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0);
+				id = m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1);
+				snir=10*log10(snir);
+				//if (nodeId == 44)
+				//	std::cout << "id: " << unsigned(id) << " The SNIR CH is " << snir << " dB, The SNIR is " << snir_p << " dB" << std::endl;
+				NS_LOG_DEBUG( "id: " << id << " The current SNIR_CC is " << snir << " dB");
+		  break;
+			  default:
+			  break;
+	  }	/* -----  end switch  ----- */
+
+	  if (snir >= snirIsolation)
         {
           // Move on and check the rest of the interferers
-          NS_LOG_DEBUG ("Packet survived interference with SF " << currentSf);
+          NS_LOG_DEBUG ("Packet survived interference with SF " << (unsigned)currentSf);
         }
       else
         {
           NS_LOG_DEBUG ("Packet destroyed by interference with SF" << unsigned(currentSf));
+		  //std::cout << "Packet destroyed by interference snir: " << snir << std::endl;
 
           return currentSf;
         }
@@ -366,6 +433,27 @@ LoraInterferenceHelper::ClearAllEvents (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   m_events.clear ();
+}
+
+void
+LoraInterferenceHelper::ClearIndexUmap (uint16_t idx)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+  
+  if(m_chaseCombiningSnir.count((unsigned)idx)){
+  	for(uint8_t j=0; j<6; j++){
+  		//std::cout << "s: " << m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].size() << std::endl;
+		m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].at(0)=0;
+   		m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].at(1)=0;
+  	}
+  }
+}
+
+uint8_t 
+LoraInterferenceHelper::GetIncrementalRedundancy (void){
+	NS_LOG_FUNCTION_NOARGS();
+
+	return(m_incrementalRed);
 }
 
 Time

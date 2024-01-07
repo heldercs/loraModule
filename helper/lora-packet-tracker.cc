@@ -65,7 +65,7 @@ LoraPacketTracker::MacTransmissionCallback (Ptr<Packet const> packet, uint8_t sf
 void
 LoraPacketTracker::RequiredTransmissionsCallback (uint8_t reqTx, bool success,
                                                   Time firstAttempt,
-                                                  Ptr<Packet> packet)
+                                                  Ptr<Packet> packet, uint8_t sf)
 {
   NS_LOG_INFO ("Finished retransmission attempts for a packet");
   NS_LOG_DEBUG ("Packet: " << packet << "ReqTx " << unsigned(reqTx) <<
@@ -75,6 +75,7 @@ LoraPacketTracker::RequiredTransmissionsCallback (uint8_t reqTx, bool success,
   RetransmissionStatus entry;
   entry.firstAttempt = firstAttempt;
   entry.finishTime = Simulator::Now ();
+  entry.sf = sf;
   entry.reTxAttempts = reqTx;
   entry.successful = success;
 
@@ -387,7 +388,7 @@ LoraPacketTracker::PrintPhyPacketsPerGw (Time startTime, Time stopTime,
          it != m_macPacketTracker.end ();
          ++it)
     {
-		//cout << "id: " << (*it).second.senderId << endl;
+		//std::cout << "sf: " << (unsigned)(*it).second.sf << " sf2: " << (unsigned)sf << std::endl;
 		if ((*it).second.sf == sf)
 		{
         	if ((*it).second.sendTime >= startTime && (*it).second.sendTime <= stopTime)
@@ -431,6 +432,40 @@ LoraPacketTracker::PrintPhyPacketsPerGw (Time startTime, Time stopTime,
     return std::to_string (sent) + " " +
       std::to_string (received);
   }
+
+  std::string
+  LoraPacketTracker::CountMacPacketsGloballyCpsr (Time startTime, Time stopTime, uint8_t sf)
+  {
+    NS_LOG_FUNCTION (this << startTime << stopTime);
+
+    double sent = 0;
+    double received = 0;
+  	std::vector<double> rtxCounts (4, 0);
+
+    for (auto it = m_reTransmissionTracker.begin ();
+         it != m_reTransmissionTracker.end ();
+         ++it)
+      {
+			if((*it).second.sf == sf){
+        		if ((*it).second.firstAttempt >= startTime && (*it).second.firstAttempt <= stopTime){
+           	 		sent++;
+					rtxCounts.at((*it).second.reTxAttempts-1) += 1;
+           	 		NS_LOG_DEBUG ("Found a packet");
+            		NS_LOG_DEBUG ("Number of attempts: " << unsigned(it->second.reTxAttempts) <<
+                  		 	       ", successful: " << it->second.successful);
+            		if (it->second.successful){
+                		received++;
+              		}
+          		}
+      		}
+		}
+	  	std::string output ("");
+  		for (int i = 0; i < 4; i++){
+      		output += std::to_string (rtxCounts.at (i)) + " ";
+    	}
+  		return output;
+ 	}
+
 
 
   std::string

@@ -342,6 +342,7 @@ protected:
     Ptr<Packet> packet = 0;
     bool waitingAck = false;
     uint8_t retxLeft;
+	uint8_t sf;
   };
 
   /**
@@ -429,7 +430,7 @@ protected:
    *
    * \see class CallBackTraceSource
    */
-  TracedCallback<uint8_t, bool, Time, Ptr<Packet> > m_requiredTxCallback;
+  TracedCallback<uint8_t, bool, Time, Ptr<Packet>, uint8_t> m_requiredTxCallback;
 
 private:
   /**

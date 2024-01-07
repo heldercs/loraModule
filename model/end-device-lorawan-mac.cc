@@ -125,7 +125,7 @@ EndDeviceLorawanMac::EndDeviceLorawanMac ()
       m_lastKnownLinkMargin (0),
       m_lastKnownGatewayCount (0),
       m_aggregatedDutyCycle (1),
-      m_mType (LorawanMacHeader::CONFIRMED_DATA_UP),
+      m_mType (LorawanMacHeader::UNCONFIRMED_DATA_UP),
       m_currentFCnt (0)
 {
   NS_LOG_FUNCTION (this);
@@ -244,7 +244,7 @@ EndDeviceLorawanMac::DoSend (Ptr<Packet> packet)
         {
           // Call the callback to notify about the failure
           uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet);
+          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           NS_LOG_DEBUG (" Received new packet from the application layer: stopping retransmission procedure. Used " <<
                         unsigned(txs) << " transmissions out of a maximum of " << unsigned(m_maxNumbTx) << ".");
         }
@@ -260,7 +260,7 @@ EndDeviceLorawanMac::DoSend (Ptr<Packet> packet)
           m_retxParams.waitingAck = true;
           m_retxParams.firstAttempt = Simulator::Now ();
           m_retxParams.retxLeft = m_retxParams.retxLeft - 1;       // decreasing the number of retransmissions
-
+		  m_retxParams.sf = GetSfFromDataRate (m_dataRate);
           NS_LOG_DEBUG ("Message type is " << m_mType);
           NS_LOG_DEBUG ("It is a confirmed packet. Setting retransmission parameters and decreasing the number of transmissions left.");
 
@@ -269,8 +269,8 @@ EndDeviceLorawanMac::DoSend (Ptr<Packet> packet)
 
           // Sent a new packet
           NS_LOG_DEBUG ("Copied packet: " << m_retxParams.packet);
-          m_sentNewPacket (m_retxParams.packet, GetSfFromDataRate (m_dataRate));
-
+          
+		  m_sentNewPacket (m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           // static_cast<ClassAEndDeviceLorawanMac*>(this)->SendToPhy (m_retxParams.packet);
           SendToPhy (m_retxParams.packet);
         }
@@ -346,7 +346,7 @@ EndDeviceLorawanMac::ParseCommands (LoraFrameHeader frameHeader)
           NS_LOG_DEBUG ("Reset retransmission variables to default values and cancel retransmission if already scheduled.");
 
           uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-          m_requiredTxCallback (txs, true, m_retxParams.firstAttempt, m_retxParams.packet);
+          m_requiredTxCallback (txs, true, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           NS_LOG_DEBUG ("Received ACK packet after " << unsigned(txs) << " transmissions: stopping retransmission procedure. ");
 
           // Reset retransmission parameters

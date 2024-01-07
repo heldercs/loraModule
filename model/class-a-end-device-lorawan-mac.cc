@@ -25,6 +25,7 @@
 #include "ns3/class-a-end-device-lorawan-mac.h"
 #include "ns3/end-device-lorawan-mac.h"
 #include "ns3/end-device-lora-phy.h"
+#include "ns3/lora-tag.h"
 #include "ns3/log.h"
 #include <algorithm>
 
@@ -89,6 +90,13 @@ ClassAEndDeviceLorawanMac::SendToPhy (Ptr<Packet> packetToSend)
       m_txPower = 14; // Reset transmission power
       m_dataRate = m_dataRate - 1;
     }
+
+  LoraTag tag;
+  packetToSend->RemovePacketTag (tag);
+  tag.SetNumTx(m_retxParams.retxLeft);
+  packetToSend->AddPacketTag(tag);
+
+  //std::cout << "sending rtx: " <<  (unsigned)m_retxParams.retxLeft ;
 
   // Craft LoraTxParameters object
   LoraTxParameters params;
@@ -200,7 +208,7 @@ ClassAEndDeviceLorawanMac::Receive (Ptr<Packet const> packet)
               if (m_retxParams.retxLeft == 0)
                 {
                   uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-                  m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet);
+                  m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
                   NS_LOG_DEBUG ("Failure: no more retransmissions left. Used " << unsigned(txs) << " transmissions.");
 
                   // Reset retransmission parameters
@@ -225,7 +233,7 @@ ClassAEndDeviceLorawanMac::Receive (Ptr<Packet const> packet)
       else
         {
           uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet);
+          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           NS_LOG_DEBUG ("Failure: no more retransmissions left. Used " << unsigned(txs) << " transmissions.");
 
           // Reset retransmission parameters
@@ -254,7 +262,7 @@ ClassAEndDeviceLorawanMac::FailedReception (Ptr<Packet const> packet)
       else
         {
           uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet);
+          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           NS_LOG_DEBUG ("Failure: no more retransmissions left. Used " << unsigned(txs) << " transmissions.");
 
           // Reset retransmission parameters
@@ -417,7 +425,7 @@ ClassAEndDeviceLorawanMac::CloseSecondReceiveWindow (void)
       else if (m_retxParams.retxLeft == 0 && m_phy->GetObject<EndDeviceLoraPhy> ()->GetState () != EndDeviceLoraPhy::RX)
         {
           uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft);
-          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet);
+          m_requiredTxCallback (txs, false, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
           NS_LOG_DEBUG ("Failure: no more retransmissions left. Used " << unsigned(txs) << " transmissions.");
 
           // Reset retransmission parameters
@@ -432,7 +440,7 @@ ClassAEndDeviceLorawanMac::CloseSecondReceiveWindow (void)
   else
     {
       uint8_t txs = m_maxNumbTx - (m_retxParams.retxLeft );
-      m_requiredTxCallback (txs, true, m_retxParams.firstAttempt, m_retxParams.packet);
+      m_requiredTxCallback (txs, true, m_retxParams.firstAttempt, m_retxParams.packet, GetSfFromDataRate (m_dataRate));
       NS_LOG_INFO ("We have " << unsigned(m_retxParams.retxLeft) <<
                    " transmissions left. We were not transmitting confirmed messages.");
 
