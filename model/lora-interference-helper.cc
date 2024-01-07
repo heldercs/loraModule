@@ -375,29 +375,29 @@ LoraInterferenceHelper::IsDestroyedByInterference (Ptr<LoraInterferenceHelper::E
      // add incremental redundancy case 
 	  switch ( event->GetIrType() ) {
 			  case CHASECOMBINING:
-				if(m_chaseCombiningSnir.count(unsigned(nodeId))>0){
-					if(m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].size()>0){
-						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)+=snir;
-						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)++;
+				if(m_chaseCombiningSnir.count(nodeId)>0){
+					if(m_chaseCombiningSnir[nodeId][currentSf - 7].size()>0){
+						m_chaseCombiningSnir[nodeId][currentSf - 7].at(0)+=snir;
+						m_chaseCombiningSnir[nodeId][currentSf - 7].at(1)++;
 						//if (nodeId == 44)
 						//	std::cout << "The SNIRp CH is " << m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
 					}else{
-						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].resize(2);
-						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)=snir;
-						m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)=1;
+						m_chaseCombiningSnir[nodeId][currentSf - 7].resize(2);
+						m_chaseCombiningSnir[nodeId][currentSf - 7].at(0)=snir;
+						m_chaseCombiningSnir[nodeId][currentSf - 7].at(1)=1;
 						//if (nodeId == 44)
 						//	std::cout << "I The SNIRp CH is "<< m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
 					}
 				}else{
-					m_chaseCombiningSnir[unsigned(nodeId)].resize(6);
-					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].resize(2);
-					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0)=snir;
-					m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1)=1;
+					m_chaseCombiningSnir[nodeId].resize(6);
+					m_chaseCombiningSnir[nodeId][currentSf - 7].resize(2);
+					m_chaseCombiningSnir[nodeId][currentSf - 7].at(0)=snir;
+					m_chaseCombiningSnir[nodeId][currentSf - 7].at(1)=1;
 					//if (nodeId == 44)
 					//	std::cout << "I The SNIRp CH is " << m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0) << std::endl;
 				}
-				snir = m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(0);
-				id = m_chaseCombiningSnir[unsigned(nodeId)][unsigned(currentSf) - 7].at(1);
+				snir = m_chaseCombiningSnir[nodeId][currentSf - 7].at(0);
+				id = m_chaseCombiningSnir[nodeId][currentSf - 7].at(1);
 				snir=10*log10(snir);
 				//if (nodeId == 44)
 				//	std::cout << "id: " << unsigned(id) << " The SNIR CH is " << snir << " dB, The SNIR is " << snir_p << " dB" << std::endl;
@@ -440,11 +440,11 @@ LoraInterferenceHelper::ClearIndexUmap (uint16_t idx)
 {
   NS_LOG_FUNCTION_NOARGS ();
   
-  if(m_chaseCombiningSnir.count((unsigned)idx)){
+  if(m_chaseCombiningSnir.count(idx)){
   	for(uint8_t j=0; j<6; j++){
-  		//std::cout << "s: " << m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].size() << std::endl;
-		m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].at(0)=0;
-   		m_chaseCombiningSnir[unsigned(idx)][unsigned(j)].at(1)=0;
+  		//std::cout << "s: " << m_chaseCombiningSnir[idx][j].size() << std::endl;
+		m_chaseCombiningSnir[idx][j].at(0)=0;
+   		m_chaseCombiningSnir[idx][j].at(1)=0;
   	}
   }
 }

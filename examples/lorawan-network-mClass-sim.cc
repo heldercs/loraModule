@@ -242,7 +242,7 @@ int main (int argc, char *argv[]){
  	string fileData="./scratch/mac-STAs-GW-1.txt";
 	string endDevFile="./TestResult/test";
 	string gwFile="./TestResult/test";
-	bool flagRtx=true; //, sizeStatus=0;
+	bool flagRtx=false; //, sizeStatus=0;
   	uint32_t nSeed=1;
 	uint8_t trial=1, numClass=0; //, nCount=0, nClass1=0, nClass2=0, nClass3=0;
 	vector<uint8_t> sfQuant(6,0);
@@ -396,7 +396,7 @@ int main (int argc, char *argv[]){
   	macHelper.SetAddressGenerator (addrGen);
   	phyHelper.SetDeviceType (LoraPhyHelper::ED);
   	macHelper.SetDeviceType (LorawanMacHelper::ED_A);
-   	macHelper.SetRegion (LorawanMacHelper::SingleChannel);
+   	//macHelper.SetRegion (LorawanMacHelper::SingleChannel);
   	helper.Install (phyHelper, macHelper, endDevices);
 
   	// Now end devices are connected to the channel
