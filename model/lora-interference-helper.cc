@@ -187,8 +187,8 @@ LoraInterferenceHelper::GetTypeId (void)
   LoraInterferenceHelper::LoraInterferenceHelper () : m_collisionSnir(LoraInterferenceHelper::collisionSnirGoursaud)
 {
   NS_LOG_FUNCTION (this);
-  //m_incrementalRed = CHASECOMBINING;
-  m_incrementalRed = NOREDUNDANCY;
+  m_incrementalRed = CHASECOMBINING;
+  //m_incrementalRed = NOREDUNDANCY;
   SetCollisionMatrix (collisionMatrix);
 }
 
@@ -438,15 +438,16 @@ LoraInterferenceHelper::ClearAllEvents (void)
 void
 LoraInterferenceHelper::ClearIndexUmap (uint16_t idx)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-  
-  if(m_chaseCombiningSnir.count(idx)){
-  	for(uint8_t j=0; j<6; j++){
-  		//std::cout << "s: " << m_chaseCombiningSnir[idx][j].size() << std::endl;
-		m_chaseCombiningSnir[idx][j].at(0)=0;
-   		m_chaseCombiningSnir[idx][j].at(1)=0;
+  	NS_LOG_FUNCTION_NOARGS ();
+  	if(m_chaseCombiningSnir.count(idx)){
+  		for(uint8_t j=0; j<6; j++){
+  			//std::cout << "j: " << (unsigned)j << " id: " << m_chaseCombiningSnir.count(idx) << " s: " << m_chaseCombiningSnir[idx][j].size() << std::endl;
+  			if(m_chaseCombiningSnir[idx][j].size()){
+				m_chaseCombiningSnir[idx][j].at(0)=0;
+   				m_chaseCombiningSnir[idx][j].at(1)=0;
+			}
+		}
   	}
-  }
 }
 
 uint8_t 
