@@ -465,13 +465,13 @@ LorawanMacHelper::ApplyCommonSingleChannelConfigurations (Ptr<LorawanMac> lorawa
       std::vector<uint32_t>{59, 59, 59, 123, 230, 230, 230, 230});
 }
 
-std::vector<uint8_t>
+std::vector<uint16_t>
 LorawanMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways,
                                          Ptr<LoraChannel> channel, bool enableRTX)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<uint8_t> sfQuantity (6, 0);
+  std::vector<uint16_t> sfQuantity (6, 0);
   for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j)
     {
       Ptr<Node> object = *j;
@@ -578,10 +578,10 @@ LorawanMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer
 } //  end function
 
 
-std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsEIB (NodeContainer endDevices, double rad){
+std::vector<uint16_t> LorawanMacHelper::SetSpreadingFactorsEIB (NodeContainer endDevices, double rad){
   	NS_LOG_FUNCTION_NOARGS ();
 
-  	std::vector<uint8_t> sfQuantity (6, 0);
+  	std::vector<uint16_t> sfQuantity (6, 0);
   	double pos=0, threshold=rad/3;
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
       	Ptr<Node> object = *j;
@@ -625,10 +625,10 @@ std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsEIB (NodeContainer end
   	return(sfQuantity);
 }
 
-std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsEAB (NodeContainer endDevices, double rad){
+std::vector<uint16_t> LorawanMacHelper::SetSpreadingFactorsEAB (NodeContainer endDevices, double rad){
   	NS_LOG_FUNCTION_NOARGS ();
 
-  	std::vector<uint8_t> sfQuantity (6, 0);
+  	std::vector<uint16_t> sfQuantity (6, 0);
   	double pos=0;
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
       	Ptr<Node> object = *j;
@@ -672,7 +672,7 @@ std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsEAB (NodeContainer end
   return(sfQuantity);
 }
 
-std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsStrategies (NodeContainer endDevices, std::vector<uint8_t> sfQuantity, 
+std::vector<uint16_t> LorawanMacHelper::SetSpreadingFactorsStrategies (NodeContainer endDevices, std::vector<uint16_t> sfQuantity, 
 												 uint32_t edge, uint32_t edge2, uint32_t nDev, uint8_t mode){
   	NS_LOG_FUNCTION_NOARGS ();
 	uint8_t drAlm = 1;
@@ -849,10 +849,10 @@ std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsStrategies (NodeContai
   	return(sfQuantity);
 }
 
-std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsProp (NodeContainer endDevices, double prop1, double prop2, double rad){
+std::vector<uint16_t> LorawanMacHelper::SetSpreadingFactorsProp (NodeContainer endDevices, double prop1, double prop2, double rad){
   	NS_LOG_FUNCTION_NOARGS ();
 
-  	std::vector<uint8_t> sfQuantity (6, 0);
+  	std::vector<uint16_t> sfQuantity (6, 0);
   	double pos=0;
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
     	Ptr<Node> object = *j;
@@ -909,14 +909,14 @@ std::vector<uint8_t> LorawanMacHelper::SetSpreadingFactorsProp (NodeContainer en
   return(sfQuantity);
 }
 
-std::vector<uint8_t>
+std::vector<uint16_t>
 LorawanMacHelper::SetSpreadingFactorsGivenDistribution (NodeContainer endDevices,
                                                         NodeContainer gateways,
                                                         std::vector<double> distribution)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<uint8_t> sfQuantity (6, 0);
+  std::vector<uint16_t> sfQuantity (6, 0);
   Ptr<UniformRandomVariable> uniformRV = CreateObject<UniformRandomVariable> ();
   std::vector<double> cumdistr (6);
   cumdistr[0] = distribution[0];

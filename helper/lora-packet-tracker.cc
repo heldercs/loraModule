@@ -479,7 +479,7 @@ LoraPacketTracker::PrintPhyPacketsPerGw (Time startTime, Time stopTime,
 	{
   		for (auto itMac = m_macPacketTracker.begin (); itMac != m_macPacketTracker.end (); ++itMac)
     	{
-      	// NS_LOG_DEBUG ("Dealing with packet " << (*itMac).first);
+      	 NS_LOG_DEBUG ("Dealing with packet " << (*itMac).first);
 
       		if ((*itMac).second.sendTime > startTime && (*itMac).second.sendTime < stopTime)
         	{
@@ -489,7 +489,7 @@ LoraPacketTracker::PrintPhyPacketsPerGw (Time startTime, Time stopTime,
           		/////////////////
           		if ((*itMac).second.receptionTimes.find(gwId)->second == Time::Max () || (*itMac).second.receptionTimes.find(gwId)->second < (*itMac).second.sendTime )
             	{
-              		// NS_LOG_DEBUG ("Packet never received, ignoring it");
+              		NS_LOG_DEBUG ("Packet never received, ignoring it");
               		packetsOutsideTransient--;
            	 	}
           		else

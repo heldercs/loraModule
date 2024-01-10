@@ -118,23 +118,23 @@ public:
    * SF11 -> DR1
    * SF12 -> DR0
    */
-  static std::vector<uint8_t> SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways,
+  static std::vector<uint16_t> SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways,
                                                  Ptr<LoraChannel> channel, bool enableRTX);
  
-  static std::vector<uint8_t> SetSpreadingFactorsEIB (NodeContainer endDevices, double rad);
+  static std::vector<uint16_t> SetSpreadingFactorsEIB (NodeContainer endDevices, double rad);
  
-  static std::vector<uint8_t> SetSpreadingFactorsEAB (NodeContainer endDevices, double rad);
+  static std::vector<uint16_t> SetSpreadingFactorsEAB (NodeContainer endDevices, double rad);
 
-  static std::vector<uint8_t> SetSpreadingFactorsStrategies (NodeContainer endDevices, std::vector<uint8_t> sfQuantity, 
+  static std::vector<uint16_t> SetSpreadingFactorsStrategies (NodeContainer endDevices, std::vector<uint16_t> sfQuantity, 
 														 uint32_t edge, uint32_t edge2, uint32_t nDev, 
 														 uint8_t mode);
-  static std::vector<uint8_t> SetSpreadingFactorsProp (NodeContainer endDevices, double prop1, double prop2, double rad);
+  static std::vector<uint16_t> SetSpreadingFactorsProp (NodeContainer endDevices, double prop1, double prop2, double rad);
 
 
   /**
    * Set up the end device's data rates according to the given distribution.
    */
-  static std::vector<uint8_t> SetSpreadingFactorsGivenDistribution (NodeContainer endDevices,
+  static std::vector<uint16_t> SetSpreadingFactorsGivenDistribution (NodeContainer endDevices,
                                                                 NodeContainer gateways,
                                                                 std::vector<double> distribution);
 

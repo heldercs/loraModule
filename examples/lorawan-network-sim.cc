@@ -160,7 +160,7 @@ int main (int argc, char *argv[]){
 	bool rtxEnable=false;
   	uint32_t nSeed=1;
 	uint8_t trial=1; //, numRTX=0;
-	vector<uint8_t> sfQuant(6,0);
+	vector<uint16_t> sfQuant(6,0);
 	double packLoss=0, sent=0, received=0, avgDelay=0;
 	double angle=0, sAngle=M_PI;
 	double throughput=0, probSucc=0, probLoss=0; 
@@ -379,22 +379,22 @@ int main (int argc, char *argv[]){
 
   	Time appStopTime = Seconds (simulationTime);
 
-/*	PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
+	PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
   	appHelper.SetPeriod (Seconds (appPeriodSeconds));
   	appHelper.SetPacketSize (19);
   	Ptr<RandomVariableStream> rv = CreateObjectWithAttributes<UniformRandomVariable> (
     	  "Min", DoubleValue (0), "Max", DoubleValue (10));
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
-*/
 
-    RandomSenderHelper appHelper = RandomSenderHelper ();
+
+/*    RandomSenderHelper appHelper = RandomSenderHelper ();
   	appHelper.SetMean (appPeriodSeconds);
    	appHelper.SetPacketSize (19);
   	ApplicationContainer appContainer = appHelper.Install (endDevices);
 
   	appContainer.Start (Seconds (0));
   	appContainer.Stop (appStopTime);
-
+*/
   	/**************************
    	*  Create Network Server  *
    	***************************/

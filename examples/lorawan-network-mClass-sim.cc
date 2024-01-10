@@ -245,7 +245,7 @@ int main (int argc, char *argv[]){
 	bool flagRtx=false; //, sizeStatus=0;
   	uint32_t nSeed=1;
 	uint8_t trial=1, numClass=0; //, nCount=0, nClass1=0, nClass2=0, nClass3=0;
-	vector<uint8_t> sfQuant(6,0);
+	vector<uint16_t> sfQuant(6,0);
 	vector<double> rtxQuant(4,0);
 	double packLoss=0, sent=0, received=0, avgDelay=0;
 	double angle=0, sAngle=M_PI; //, radius1=4200; //, radius2=4900;
@@ -462,7 +462,7 @@ int main (int argc, char *argv[]){
 	//sfQuant = macHelper.SetSpreadingFactorsProp (endDevices, 0.4, 0, radius);
   	//sfQuant = macHelper.SetSpreadingFactorsStrategies (endDevices, sfQuant, 0.76*nDevices, 0*nDevices, nDevices, LorawanMacHelper::CLASS_TWO);
 
-	for(uint8_t i=0; i<sfQuant.size(); i++)
+	for(uint16_t i=0; i<sfQuant.size(); i++)
 		sfQuant.at(i)?numClass++:numClass;
 
   	NS_LOG_DEBUG ("Completed configuration");
