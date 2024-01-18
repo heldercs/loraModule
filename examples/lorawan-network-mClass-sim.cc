@@ -375,13 +375,10 @@ int main (int argc, char *argv[]){
 
   	// Assign a mobility model to each node
   	mobility.Install (endDevices);
-  	// int x =50.00, y= 0;
   	// Make it so that nodes are at a certain height > 0
   	for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j){
       	Ptr<MobilityModel> mobility = (*j)->GetObject<MobilityModel> ();
       	Vector position = mobility->GetPosition ();
-		//position.x = 700;
-		//position.y = 700;	
  		position.z = 1.2;
       	mobility->SetPosition (position);
 	}
@@ -456,7 +453,7 @@ int main (int argc, char *argv[]){
    	*  Set up the end device's spreading factor  *
    	**********************************************/
 
-  	sfQuant = macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, flagRtx);
+  	sfQuant = macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
 	//sfQuant = macHelper.SetSpreadingFactorsEIB (endDevices, radius);
 	//sfQuant = macHelper.SetSpreadingFactorsEAB (endDevices, radius);
 	//sfQuant = macHelper.SetSpreadingFactorsProp (endDevices, 0.4, 0, radius);
@@ -516,7 +513,7 @@ int main (int argc, char *argv[]){
   	// Simulation //
   	////////////////
 
-  	Simulator::Stop (appStopTime + Hours (1));
+  	Simulator::Stop (appStopTime + Seconds (10));
 
   	NS_LOG_INFO ("Running simulation...");
   	Simulator::Run ();
@@ -529,13 +526,12 @@ int main (int argc, char *argv[]){
    	NS_LOG_INFO("SF Allocation: 6 -> "<< "SF7=" << (unsigned)sfQuant.at(0) << " SF8=" << (unsigned)sfQuant.at(1) << " SF9=" << (unsigned)sfQuant.at(2)
 				<< " SF10=" << (unsigned)sfQuant.at(3) << " SF11=" << (unsigned)sfQuant.at(4) << " SF12=" << (unsigned)sfQuant.at(5));
 	
-	for(uint8_t i=SF7;i<SF7+numClass;i++)
-	{
+	LoraPacketTracker &tracker = helper.GetPacketTracker ();
+	
+	for(uint8_t i=SF7;i<SF7+numClass;i++){
     	NS_LOG_INFO (endl <<"//////////////////////////////////////////////");
     	NS_LOG_INFO ("//  Computing SF-"<<(unsigned)i<<" performance metrics  //");
     	NS_LOG_INFO ("//////////////////////////////////////////////" << endl);
-
-  		LoraPacketTracker &tracker = helper.GetPacketTracker ();
 
 		stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (2), i)) >> sent >> received;
 
@@ -550,7 +546,7 @@ int main (int argc, char *argv[]){
 
   		probSucc = received/sent;
   		probLoss = packLoss/sent;
-
+		
 		NS_LOG_INFO("----------------------------------------------------------------");
    		NS_LOG_INFO("nDevices" << "  |  " << "throughput" << "  |  "  << "probSucc"  << "  |  " << "probLoss" <<  "  |  " << "avgDelay"); 
    		NS_LOG_INFO(nDevices  << "       |  " << throughput << "    |  " << probSucc << "   |  " << probLoss << "   |  " << avgDelay);
@@ -567,7 +563,7 @@ int main (int argc, char *argv[]){
 			for(uint8_t i=0; i<rtxQuant.size(); i++)
 				myfile << ", " << rtxQuant[i];
 	  		myfile << "\n";
-			myfile.close();  
+			myfile.close(); 
 		}
 
 	   	NS_LOG_INFO("numDev:" << nDevices << " numGW:" << nGateways << " simTime:" << simulationTime << " throughput:" << throughput);
@@ -581,8 +577,42 @@ int main (int argc, char *argv[]){
   		myfile << "numDev: " << nDevices << " numGat: " << nGateways << " simTime: " << simulationTime << " throughput: " << throughput<< "\n";
   		myfile << "##################################################################" << "\n\n";
   		myfile.close();  
+	}
+  
+	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  	NS_LOG_INFO ("Computing system performance metrics");
+ 
+ 	stringstream(tracker.CountMacPacketsGlobally (Seconds (0), appStopTime + Hours (1))) >> sent >> received;
 
-}
+	stringstream(tracker.CountMacPacketsGloballyDelay(Seconds(0), appStopTime + Hours(1), (unsigned)nDevices, (unsigned)nGateways)) >> avgDelay;
+
+	packLoss = sent - received;
+  	throughput = received/simulationTime;
+
+  	probSucc = received/sent;
+  	probLoss = packLoss/sent;
+
+	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+   	NS_LOG_INFO("nDevices: " << nDevices); 
+	NS_LOG_INFO("throughput: " << throughput); 
+	NS_LOG_INFO("probSucc: " << probSucc << " (" << probSucc*100 << "%)"); 
+	NS_LOG_INFO("probLoss: " <<  probLoss<< " (" << probLoss*100 << "%)"); 
+	NS_LOG_INFO("avgDelay: " << avgDelay); 
+	NS_LOG_INFO("----------------------------------"<< endl);
+
+	myfile.open (fileMetric+"-RTX"+".dat", ios::out | ios::app);
+	myfile << nDevices << ", " << sent;
+	myfile << "\n";
+	myfile.close(); 
+	
+	myfile.open (fileMetric+".dat", ios::out | ios::app);
+	myfile << nDevices << ", " << throughput << ", " << probSucc << ", " <<  probLoss  << ", " << avgDelay << "\n";
+ 	myfile.close();  
+
+   	NS_LOG_INFO("numDev:" << nDevices << " numGW:" << unsigned(nGateways) << " simTime:" << simulationTime << " throughput:" << throughput);
+  	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  	NS_LOG_INFO("sent:" << sent << "    succ:" << received << "     drop:"<< packLoss  << "   delay:" << avgDelay);
+  	NS_LOG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl);
 
   	return(0);
 }
