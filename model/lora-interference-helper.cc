@@ -187,8 +187,8 @@ LoraInterferenceHelper::GetTypeId (void)
   LoraInterferenceHelper::LoraInterferenceHelper () : m_collisionSnir(LoraInterferenceHelper::collisionSnirGoursaud)
 {
   NS_LOG_FUNCTION (this);
-  m_incrementalRed = CHASECOMBINING;
-  //m_incrementalRed = NOREDUNDANCY;
+  //m_incrementalRed = CHASECOMBINING;
+  m_incrementalRed = NOREDUNDANCY;
   SetCollisionMatrix (collisionMatrix);
 }
 
@@ -358,13 +358,12 @@ LoraInterferenceHelper::IsDestroyedByInterference (Ptr<LoraInterferenceHelper::E
 	  if(event->GetIrType()){
 		snir = signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7);
 	  	//double snir_p =	10 * log10 (signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7));
-		//std::cout << " The current SNIR is " << snir_p << " dB" << std::endl;
-		//std::cout << " The current SNIR is " << snir << std::endl;
-		NS_LOG_DEBUG ("The current SNIR is " << snir << " W");
+   		
+		NS_LOG_DEBUG ("The current SNIR_CC is " << snir << " W");
       }else{
 	  	snir =
           	10 * log10 (signalEnergy / cumulativeInterferenceEnergy.at (unsigned(currentSf) - 7));
-	  	NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
+	  	NS_LOG_DEBUG ("The current SNIR_NC is " << snir << " dB");
       }
 	  
 
@@ -401,21 +400,22 @@ LoraInterferenceHelper::IsDestroyedByInterference (Ptr<LoraInterferenceHelper::E
 				snir=10*log10(snir);
 				//if (nodeId == 44)
 				//	std::cout << "id: " << unsigned(id) << " The SNIR CH is " << snir << " dB, The SNIR is " << snir_p << " dB" << std::endl;
-				NS_LOG_DEBUG( "id: " << id << " The current SNIR_CC is " << snir << " dB");
-		  break;
+  
+ 				NS_LOG_DEBUG( "id: " << (unsigned)id << " The acumulated SNIR_CC is " << snir << " dB");
+		  	  break;
 			  default:
 			  break;
 	  }	/* -----  end switch  ----- */
 
 	  if (snir >= snirIsolation)
         {
-          // Move on and check the rest of the interferers
-          NS_LOG_DEBUG ("Packet survived interference with SF " << (unsigned)currentSf);
+          	// Move on and check the rest of the interferers
+      		NS_LOG_DEBUG ("Packet survived interference with SF " << (unsigned)currentSf);
         }
       else
         {
-          NS_LOG_DEBUG ("Packet destroyed by interference with SF" << unsigned(currentSf));
-		  //std::cout << "Packet destroyed by interference snir: " << snir << std::endl;
+  			NS_LOG_DEBUG ("Packet destroyed by interference with SF" << unsigned(currentSf));
+		  	//std::cout << "Packet destroyed by interference snir: " << snir << std::endl;
 
           return currentSf;
         }

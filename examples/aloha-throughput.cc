@@ -296,7 +296,7 @@ main (int argc, char *argv[])
         "StartSending", MakeCallback (OnTransmissionCallback));
   }
 
-  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
+  macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
 
   ////////////////
   // Simulation //

@@ -119,7 +119,7 @@ public:
    * SF12 -> DR0
    */
   static std::vector<uint16_t> SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways,
-                                                 Ptr<LoraChannel> channel, bool enableRTX);
+                                                 Ptr<LoraChannel> channel);
  
   static std::vector<uint16_t> SetSpreadingFactorsEIB (NodeContainer endDevices, double rad);
  

@@ -239,7 +239,7 @@ int main (int argc, char *argv[])
   // Do not set spreading factors up: we will wait for the NS to do this
   if (initializeSF)
     {
-      macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel, 0);
+      macHelper.SetSpreadingFactorsUp (endDevices, gateways, channel);
     }
 
   ////////////

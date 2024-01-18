@@ -423,7 +423,7 @@ LorawanMacHelper::ConfigureForSingleChannelRegion (Ptr<GatewayLorawanMac> gwMac)
         }
 
       int receptionPaths = 0;
-      int maxReceptionPaths = 8;
+      int maxReceptionPaths = 1;
       while (receptionPaths < maxReceptionPaths)
         {
           gwPhy->GetObject<GatewayLoraPhy> ()->AddReceptionPath ();
@@ -467,7 +467,7 @@ LorawanMacHelper::ApplyCommonSingleChannelConfigurations (Ptr<LorawanMac> lorawa
 
 std::vector<uint16_t>
 LorawanMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways,
-                                         Ptr<LoraChannel> channel, bool enableRTX)
+                                         Ptr<LoraChannel> channel)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -509,38 +509,36 @@ LorawanMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer
 
       // NS_LOG_DEBUG ("Rx Power: " << highestRxPower);
       double rxPower = highestRxPower;
-	  if(enableRTX){
+      // Get the ED sensitivity
+      Ptr<EndDeviceLoraPhy> edPhy = loraNetDevice->GetPhy ()->GetObject<EndDeviceLoraPhy> ();
+      const double *edSensitivity = edPhy->sensitivity;
 
-      	// Get the ED sensitivity
-      	Ptr<EndDeviceLoraPhy> edPhy = loraNetDevice->GetPhy ()->GetObject<EndDeviceLoraPhy> ();
-      	const double *edSensitivity = edPhy->sensitivity;
-
-      	if (rxPower > *edSensitivity){
-        	mac->SetDataRate (5);
-        	sfQuantity[0] = sfQuantity[0] + 1;
-        }else if (rxPower > *(edSensitivity + 1)){
-         	mac->SetDataRate (4);
-          	sfQuantity[1] = sfQuantity[1] + 1;
-        }else if (rxPower > *(edSensitivity + 2)){
-         	mac->SetDataRate (3);
-          	sfQuantity[2] = sfQuantity[2] + 1;
-        }else if (rxPower > *(edSensitivity + 3)){
-          	mac->SetDataRate (2);
-          	sfQuantity[3] = sfQuantity[3] + 1;
-        }else if (rxPower > *(edSensitivity + 4)){
-          	mac->SetDataRate (1);
-          	sfQuantity[4] = sfQuantity[4] + 1;
-        }else if (rxPower > *(edSensitivity + 5)){
-          	mac->SetDataRate (0);
-          	sfQuantity[5] = sfQuantity[5] + 1;
-        }else{ // Device is out of range. Assign SF12.
-          	NS_LOG_DEBUG ("Device out of range");
-          	mac->SetDataRate (0);
-          	sfQuantity[6] = sfQuantity[6] + 1;
-          	NS_LOG_DEBUG ("sfQuantity[6] = " << sfQuantity[6]);
-        }
-	  }else{
-
+      if (rxPower > *edSensitivity){
+      	mac->SetDataRate (5);
+      	sfQuantity[0] = sfQuantity[0] + 1;
+      }else if (rxPower > *(edSensitivity + 1)){
+        mac->SetDataRate (4);
+        sfQuantity[1] = sfQuantity[1] + 1;
+      }else if (rxPower > *(edSensitivity + 2)){
+       	mac->SetDataRate (3);
+       	sfQuantity[2] = sfQuantity[2] + 1;
+      }else if (rxPower > *(edSensitivity + 3)){
+       	mac->SetDataRate (2);
+       	sfQuantity[3] = sfQuantity[3] + 1;
+      }else if (rxPower > *(edSensitivity + 4)){
+       	mac->SetDataRate (1);
+       	sfQuantity[4] = sfQuantity[4] + 1;
+      }else if (rxPower > *(edSensitivity + 5)){
+       	mac->SetDataRate (0);
+       	sfQuantity[5] = sfQuantity[5] + 1;
+      }else{ // Device is out of range. Assign SF12.
+       	NS_LOG_DEBUG ("Device out of range");
+       	mac->SetDataRate (0);
+       	sfQuantity[6] = sfQuantity[6] + 1;
+       	NS_LOG_DEBUG ("sfQuantity[6] = " << sfQuantity[6]);
+      }
+  
+/*  
       	// Get the Gw sensitivity
       	Ptr<NetDevice> gatewayNetDevice = bestGateway->GetDevice (0);
       	Ptr<LoraNetDevice> gatewayLoraNetDevice = gatewayNetDevice->GetObject<LoraNetDevice> ();
@@ -569,7 +567,7 @@ LorawanMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer
           	mac->SetDataRate (0);
           	sfQuantity[6] = sfQuantity[6] + 1;
         }
-      }
+*/
 
     } // end loop on nodes
 
